@@ -24,20 +24,6 @@ async def updateDatabase(req):
     finally:
         client.close()
 
-def update_document(collection, spend):
-    collection.update_one(
-        {"_id": ObjectId(spend.id)},
-        {"$set": {
-            "name": spend.name,
-            "value": spend.value,
-            "payer": spend.payer,
-            "shareholder": spend.shareholder
-        }}
-    )
-
-def get_oid_str(object_id: ObjectId):
-    return str(object_id)
-
 async def connectToDatabase():
     client = MongoClient(uri)
     try:
@@ -69,6 +55,9 @@ async def addToDatabase(new_data):
         client.server_info()  # Check if the server is available
         database = client['spendData']
         spendDataCollection = database['spendData']
+
+        # Required format for insert_many function: List[Dict] while as data get from UI is List[CreateSpend]
+        new_data = [dict(data) for data in new_data]
         result = spendDataCollection.insert_many(new_data)
 
         return result.inserted_ids
@@ -77,3 +66,17 @@ async def addToDatabase(new_data):
         raise HTTPException(status_code=500, detail="Internal server error")
     finally:
         client.close()
+
+def update_document(collection, spend):
+    collection.update_one(
+        {"_id": ObjectId(spend.id)},
+        {"$set": {
+            "name": spend.name,
+            "value": spend.value,
+            "payer": spend.payer,
+            "shareholder": spend.shareholder
+        }}
+    )
+
+def get_oid_str(object_id: ObjectId):
+    return str(object_id)
