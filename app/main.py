@@ -3,11 +3,10 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.param_functions import Depends
-
 from fastapi.responses import JSONResponse
-# Import functions from data_connect.py
+
 from data_connect import connectToDatabase, updateDatabase, addToDatabase
-from models import UpdateSpendList, CreateSpendList
+from models import SpendList
 
 app = FastAPI()
 port = 3001
@@ -23,15 +22,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Define a route to send data from the database to UI
+# GET route to get data from the database
 @app.get('/data')
 async def get_data():
     data = await connectToDatabase()
     return data
 
-# Create a route to handle the POST request from the UI to update the database
-@app.put('/update', response_model=UpdateSpendList)
-async def update_data(request_data: UpdateSpendList = Depends()):
+# PUT route to handle the to update the database
+@app.put('/update', response_model=SpendList)
+async def update_data(request_data: SpendList=Depends()):
     try:
         await updateDatabase(request_data)
         return JSONResponse(content="Database updated successfully")
@@ -40,8 +39,8 @@ async def update_data(request_data: UpdateSpendList = Depends()):
         raise HTTPException(status_code=500, detail='Internal server error')
 
 # POST route for adding a document
-@app.post('/add', response_model=CreateSpendList)
-async def add_data(request_data: CreateSpendList = Depends()):
+@app.post('/add', response_model=SpendList)
+async def add_data(request_data: SpendList=Depends()):
     try:
         # Add data validation function before connecting to the database
         result = await addToDatabase(request_data.items)
