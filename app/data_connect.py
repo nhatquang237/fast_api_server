@@ -1,15 +1,15 @@
-from bson import ObjectId
 from fastapi import HTTPException
-from pymongo import MongoClient
-# Replace <YOUR_MONGODB_URI> with your MongoDB URI
-uri = "mongodb://localhost:27017"
+
+from data_connection import DatabaseConnection
+from utility import update_document
+
+def close_connection():
+    DatabaseConnection.delete_instance()
 
 async def updateDatabase(req):
-    print("Something to print " * 2)
-    client = MongoClient(uri)
+    connection = DatabaseConnection()
+    client = connection.client
     try:
-        # Connect to the MongoDB database
-        client.server_info()  # Check if the server is available
         database = client['spendData']
         collection = database['spendData']
 
@@ -21,15 +21,11 @@ async def updateDatabase(req):
     except Exception as error:
         print(f'Error updating database: {error}')
         raise HTTPException(status_code=500, detail='Internal server error')
-    finally:
-        client.close()
 
-async def connectToDatabase():
-    client = MongoClient(uri)
+async def getFromDatabase():
+    connection = DatabaseConnection()
+    client = connection.client
     try:
-        # Connect to the MongoDB database
-        client.server_info()  # Check if the server is available
-
         database = client['spendData']
         spendDataCollection = database['spendData']
         shareholderDataCollection = database['shareholderData']
@@ -46,13 +42,12 @@ async def connectToDatabase():
         print(f"Error connecting to MongoDB: {error}")
         return {'shareholderData': [], 'spendData': []}
     finally:
-        client.close()
+        close_connection()
 
 async def addToDatabase(new_data):
-    client = MongoClient(uri)
+    connection = DatabaseConnection()
+    client = connection.client
     try:
-        # Connect to the MongoDB database
-        client.server_info()  # Check if the server is available
         database = client['spendData']
         spendDataCollection = database['spendData']
 
@@ -64,19 +59,3 @@ async def addToDatabase(new_data):
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")
-    finally:
-        client.close()
-
-def update_document(collection, spend):
-    collection.update_one(
-        {"_id": ObjectId(spend.id)},
-        {"$set": {
-            "name": spend.name,
-            "value": spend.value,
-            "payer": spend.payer,
-            "shareholder": spend.shareholder
-        }}
-    )
-
-def get_oid_str(object_id: ObjectId):
-    return str(object_id)
