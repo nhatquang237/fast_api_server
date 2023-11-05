@@ -13,7 +13,6 @@ class DatabaseConnection:
         """Safe exit: Ensure always close connection to database"""
         self.client.close()
 
-    @classmethod
     def __new__(cls):
         """Singleton pattern: To ensure the connection to database can be reuse"""
         if cls._instance is None:
@@ -25,3 +24,4 @@ class DatabaseConnection:
     def delete_instance(cls):
         """Enable ability to close connection on purpose"""
         del cls._instance  # Remove the reference to the instance
+        cls._instance = None

@@ -1,4 +1,6 @@
 from bson import ObjectId
+from typing import List
+from models import UpdateSpendList
 
 def update_document(collection, spend):
     collection.update_one(
@@ -13,3 +15,15 @@ def update_document(collection, spend):
 
 def get_oid_str(object_id: ObjectId):
     return str(object_id)
+
+def get_ids_from_documents(ids: List[str]) -> List[ObjectId]:
+    """Get id of all documents
+
+    Args:
+        documents (UpdateSpendList): List of target document
+
+    Returns:
+        List[ObjectId]: list of ObjectId
+    """
+
+    return [ObjectId(id) for id in ids]

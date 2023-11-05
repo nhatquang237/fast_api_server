@@ -1,10 +1,29 @@
 from fastapi import HTTPException
 
 from data_connection import DatabaseConnection
-from utility import update_document
+from utility import update_document, get_ids_from_documents
 
 def close_connection():
     DatabaseConnection.delete_instance()
+
+async def delete_spend_data(req):
+    connection = DatabaseConnection()
+    client = connection.client
+    try:
+        # Convert the list of IDs to ObjectId instances
+        ids = req.ids
+        object_ids = get_ids_from_documents(ids)
+
+        database = client['spendData']
+        collection = database['spendData']
+
+        # Delete documents with matching ObjectIds
+        result = collection.delete_many({"_id": {"$in": object_ids}})
+
+        return {"message": f"Database value updated successfully. Deleted {result.deleted_count} documents."}
+    except Exception as error:
+        print(f'Error updating database: {error}')
+        raise HTTPException(status_code=500, detail='Internal server error')
 
 async def updateDatabase(req):
     connection = DatabaseConnection()

@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.param_functions import Depends
 from fastapi.responses import JSONResponse
 
-from data_connect import getFromDatabase, updateDatabase, addToDatabase
-from models import SpendList
+from data_connect import getFromDatabase, updateDatabase, addToDatabase, delete_spend_data
+from models import AddSpendList, UpdateSpendList, DeleteSpendList
 
 app = FastAPI()
 port = 3001
@@ -29,8 +29,8 @@ async def get_data():
     return data
 
 # PUT route to handle the to update the database
-@app.put('/update', response_model=SpendList)
-async def update_data(request_data: SpendList=Depends()):
+@app.put('/update', response_model=UpdateSpendList)
+async def update_data(request_data: UpdateSpendList=Depends()):
     try:
         await updateDatabase(request_data)
         return JSONResponse(content="Database updated successfully")
@@ -39,8 +39,8 @@ async def update_data(request_data: SpendList=Depends()):
         raise HTTPException(status_code=500, detail='Internal server error')
 
 # POST route for adding a document
-@app.post('/add', response_model=SpendList)
-async def add_data(request_data: SpendList=Depends()):
+@app.post('/add', response_model=AddSpendList)
+async def add_data(request_data: AddSpendList=Depends()):
     try:
         # Add data validation function before connecting to the database
         result = await addToDatabase(request_data.items)
@@ -49,18 +49,15 @@ async def add_data(request_data: SpendList=Depends()):
         print(f'Error adding data to the database: {e}')
         raise HTTPException(status_code=500, detail='Internal server error')
 
-@app.delete('/delete')
-async def delete_documents_by_ids(document_ids: list):
-    # Convert the list of document IDs to ObjectId instances
-    object_ids = [ObjectId(doc_id) for doc_id in document_ids]
+@app.delete('/delete', response_model=DeleteSpendList)
+async def delete_data(request_data: DeleteSpendList):
+    try:
+        result = await delete_spend_data(request_data)
+        return JSONResponse(content=f'{result["message"]}')
+    except Exception as e:
+        print(f'Error deleting document database: {e}')
+        raise HTTPException(status_code=500, detail='Internal server error')
 
-    # Delete documents with matching ObjectIds
-    result = await collection.delete_many({"_id": {"$in": object_ids}})
-
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="No matching documents found")
-
-    return {"message": f"{result.deleted_count} documents have been deleted"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host='0.0.0.0', port=port)
