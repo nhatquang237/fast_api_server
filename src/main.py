@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.param_functions import Depends
 from fastapi.responses import JSONResponse
 
-from data_connect import getFromDatabase, updateDatabase, addToDatabase, delete_spend_data
+from data_connect import get_from_database, update_database, add_to_database, delete_spend_data
 from models import AddSpendList, UpdateSpendList, DeleteSpendList
 
 app = FastAPI()
@@ -25,14 +25,14 @@ app.add_middleware(
 # GET route to get data from the database
 @app.get('/data')
 async def get_data():
-    data = await getFromDatabase()
+    data = await get_from_database()
     return data
 
 # PUT route to handle the to update the database
 @app.put('/update', response_model=UpdateSpendList)
 async def update_data(request_data: UpdateSpendList=Depends()):
     try:
-        await updateDatabase(request_data)
+        await update_database(request_data)
         return JSONResponse(content="Database updated successfully")
     except Exception as e:
         print(f'Error updating database: {e}')
@@ -43,7 +43,7 @@ async def update_data(request_data: UpdateSpendList=Depends()):
 async def add_data(request_data: AddSpendList=Depends()):
     try:
         # Add data validation function before connecting to the database
-        result = await addToDatabase(request_data.items)
+        result = await add_to_database(request_data.items)
         return JSONResponse(content=f"Added new data successfully: {result}")
     except Exception as e:
         print(f'Error adding data to the database: {e}')

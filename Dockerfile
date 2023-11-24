@@ -1,4 +1,4 @@
-FROM python:latest
+FROM python:3.10.6
 
 # set the working directory
 WORKDIR /app
@@ -8,7 +8,9 @@ COPY ./requirements.txt /app
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # copy the scripts to the folder
-COPY . /app
+COPY src/*.py /app
+
+WORKDIR /app/src
 
 # start the server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001"]

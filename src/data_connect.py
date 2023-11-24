@@ -14,7 +14,7 @@ async def delete_spend_data(req):
         ids = req.ids
         object_ids = get_ids_from_documents(ids)
 
-        database = client['spendData']
+        database = client['test']
         collection = database['spendData']
 
         # Delete documents with matching ObjectIds
@@ -25,11 +25,11 @@ async def delete_spend_data(req):
         print(f'Error updating database: {error}')
         raise HTTPException(status_code=500, detail='Internal server error')
 
-async def updateDatabase(req):
+async def update_database(req):
     connection = DatabaseConnection()
     client = connection.client
     try:
-        database = client['spendData']
+        database = client['test']
         collection = database['spendData']
 
         updated_data = req.items
@@ -41,11 +41,11 @@ async def updateDatabase(req):
         print(f'Error updating database: {error}')
         raise HTTPException(status_code=500, detail='Internal server error')
 
-async def getFromDatabase():
+async def get_from_database():
     connection = DatabaseConnection()
     client = connection.client
     try:
-        database = client['spendData']
+        database = client['test']
         spendDataCollection = database['spendData']
         shareholderDataCollection = database['shareholderData']
 
@@ -63,11 +63,11 @@ async def getFromDatabase():
     finally:
         close_connection()
 
-async def addToDatabase(new_data):
+async def add_to_database(new_data):
     connection = DatabaseConnection()
     client = connection.client
     try:
-        database = client['spendData']
+        database = client['test']
         spendDataCollection = database['spendData']
 
         # Required format for insert_many function: List[Dict] while as data get from UI is List[CreateSpend]

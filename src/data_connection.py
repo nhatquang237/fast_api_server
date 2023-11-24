@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 # Replace <YOUR_MONGODB_URI> with your MongoDB URI
-uri = "mongodb://localhost:27017"
+uri = "mongodb+srv://nnquang237:ZFsuNBQO5jYDA9Zl@cluster1211.hjkdxap.mongodb.net/?retryWrites=true&w=majority"
 
 class DatabaseConnection:
     _instance = None
