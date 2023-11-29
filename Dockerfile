@@ -10,7 +10,5 @@ RUN pip install --no-cache-dir --upgrade -r requirements.txt
 # copy the scripts to the folder
 COPY src/*.py /app
 
-WORKDIR /app/src
-
 # start the server
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001"]
