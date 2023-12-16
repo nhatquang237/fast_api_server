@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 
 from data_connection import DatabaseConnection
-from utility import update_document, get_ids_from_documents
+from utility import update_document, get_ids_from_documents, hash_password
 
 def close_connection():
     DatabaseConnection.delete_instance()
@@ -78,3 +78,49 @@ async def add_to_database(new_data):
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+async def check_email_existence(email):
+    connection = DatabaseConnection()
+    client = connection.client
+    database = client['test']
+    collection = database['users']
+
+    # Check if email was used
+    is_exist = collection.count_documents(email.model_dump())
+    return {"exists": bool(is_exist)}
+
+async def add_user_to_database(new_user):
+    connection = DatabaseConnection()
+    client = connection.client
+    database = client['test']
+    collection = database['users']
+
+    # Get dictionary of fields in data
+    new_user = new_user.model_dump()
+
+    # Hash password value before saving to database
+    new_user['password'] = str(hash_password(new_user['password']))
+
+    # Add new user to database
+    result = collection.insert_one(new_user)
+
+    return {"status_code": 200, "detail": result.inserted_id}
+
+
+async def get_user_from_database(data):
+    connection = DatabaseConnection()
+    client = connection.client
+    try:
+        database = client['test']
+        collection = database['users']
+
+        email = data.email
+        password = data.password
+
+        result = collection.find_one({"email": email, "password": str(hash_password(password))})
+
+        return result
+    except Exception as error:
+        print(f"Error connecting to MongoDB: {error}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
