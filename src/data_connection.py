@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 # Replace <YOUR_MONGODB_URI> with your MongoDB URI
 from config import DB_URI
-
+print(DB_URI)
 class DatabaseConnection:
     _instance = None
 
