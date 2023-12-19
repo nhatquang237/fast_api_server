@@ -5,37 +5,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.param_functions import Depends
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from datetime import datetime, timedelta
 
 from data_connect import *
 from models import AddSpendList, UpdateSpendList, DeleteSpendList, User, Email
-from config import PORT, SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES
+from config import PORT, ORIGINS
+from utility import create_jwt_token, decode_jwt_token
 
 app = FastAPI()
 
 # OAuth2PasswordBearer is a class for the OAuth2 password flow
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# Function to create a JWT token
-def create_jwt_token(data: dict):
-    to_encode = data.copy()
-    expires = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expires})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-
-# Function to decode a JWT token
-def decode_jwt_token(token: str):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-
-# Route for login
 
 @app.post("/token")
 async def login_for_access_token(form_data: OAuth2PasswordBearer = Depends()):
@@ -43,24 +31,11 @@ async def login_for_access_token(form_data: OAuth2PasswordBearer = Depends()):
     return {"access_token": create_jwt_token(token_data), "token_type": "bearer"}
 
 
-# Example protected route
-
 @app.get("/protected")
 async def protected_route(token: str = Depends(oauth2_scheme)):
     # Decode and verify the JWT token
     token_data = decode_jwt_token(token)
     return {"message": "You are authenticated", "token_data": token_data}
-
-# CORS (Cross-Origin Resource Sharing) configuration
-origins = ["http://localhost:3000"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 # GET route to get data from the database

@@ -1,4 +1,4 @@
-from decouple import AutoConfig
+from decouple import AutoConfig, Csv
 
 config = AutoConfig()
 
@@ -11,3 +11,5 @@ TOKEN_EXPIRE_MINUTES = int(config("TOKEN_EXPIRE_MINUTES"))
 
 # MongoDB URI
 DB_URI = config("DB_URI")
+
+ORIGINS = config("ORIGINS", cast=Csv())

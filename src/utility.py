@@ -1,8 +1,14 @@
+import bcrypt
 import logging
+
+from fastapi import HTTPException
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
 from bson import ObjectId
 from typing import List
+
 from models import UpdateSpendList
-import bcrypt
+from config import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES
 
 def update_document(collection, spend):
     collection.update_one(
@@ -82,3 +88,20 @@ def check_password(password: str, hashed_password: bytes) -> bool:
 
     # Check if the provided password matches the hash
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+
+# Function to create a JWT token
+def create_jwt_token(data: dict):
+    to_encode = data.copy()
+    expires = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expires})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+# Function to decode a JWT token
+def decode_jwt_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
