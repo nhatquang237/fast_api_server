@@ -10,22 +10,12 @@ from datetime import datetime, timedelta
 
 from data_connect import *
 from models import AddSpendList, UpdateSpendList, DeleteSpendList, User, Email
-from decouple import AutoConfig
-
+from config import PORT, SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES
 
 app = FastAPI()
-config = AutoConfig()
-port = int(config("PORT"))
-
-
-# Secret key to sign JWT tokens
-SECRET_KEY = config("SECRET_KEY")
-ALGORITHM = config("ALGORITHM")
-TOKEN_EXPIRE_MINUTES = int(config("TOKEN_EXPIRE_MINUTES"))
 
 # OAuth2PasswordBearer is a class for the OAuth2 password flow
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
 
 # Function to create a JWT token
 def create_jwt_token(data: dict):
@@ -154,4 +144,8 @@ async def login(user: User):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host='0.0.0.0', port=port)
+    uvicorn.run(app, host='0.0.0.0', port=PORT)
+
+"""
+Write test components for APIs above
+"""
