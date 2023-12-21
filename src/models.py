@@ -11,11 +11,12 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-class Email(BaseModel):
-    email: str
+class Username(BaseModel):
+    username: str
 
 
-class User(Email):
+class NewUser(BaseModel):
+    username: str
     password: str
 
 

@@ -1,16 +1,18 @@
 
 from fastapi import Depends, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from data_connect import *
-from models import User, Email
-from utility import create_jwt_token
+from models import Token, NewUser, Username
+from utility import create_jwt_token, decode_jwt_token
+from settings import TOKEN_EXPIRE_MINUTES
 
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @router.post("/register")
-async def register(user: User):
+async def register(user: NewUser):
     try:
         # Add data validation function before connecting to the database
         result = await add_user_to_database(user)
@@ -22,9 +24,9 @@ async def register(user: User):
 
 
 @router.post("/check")
-async def email_check(email: Email):
+async def username_check(username: Username):
     try:
-        result = await check_email_existence(email)
+        result = await check_email_existence(username)
         return JSONResponse(content=result['exists'])
 
     except Exception as e:
@@ -32,24 +34,30 @@ async def email_check(email: Email):
         raise HTTPException(status_code=500, detail='Internal server error')
 
 
-@router.post("/login")
-async def login(user: User):
+@router.post("/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """
+    OAuth2 compatible token login, get an access token for future requests
+    """
     try:
-        result = await get_user_from_database(user)
-        token = None
+        result = await get_user_from_database(form_data)
+        token = ""
         # Create token and send back to front-end
         if result:
             result.pop("_id", None)
             token = create_jwt_token(result)
 
-        return JSONResponse(content={"token": token})
-
     except Exception as e:
         print(f'Error adding user to the database: {e}')
         raise HTTPException(status_code=500, detail='Internal server error')
 
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+    }
 
-@router.post("/token")
-async def login_for_access_token(form_data: OAuth2PasswordBearer = Depends()):
-    token_data = {"sub": form_data.username}
-    return {"access_token": create_jwt_token(token_data), "token_type": "bearer"}
+@router.get("/protected")
+async def protected_route(token: str = Depends(oauth2_scheme)):
+    # Decode and verify the JWT token
+    token_data = decode_jwt_token(token)
+    return {"message": "You are authenticated", "token_data": token_data}

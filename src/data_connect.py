@@ -114,10 +114,7 @@ async def get_user_from_database(data):
         database = client['test']
         collection = database['users']
 
-        email = data.email
-        password = data.password
-
-        result = collection.find_one({"email": email, "password": str(hash_password(password))})
+        result = collection.find_one({"username": data.username, "password": str(hash_password(data.password))})
 
         return result
     except Exception as error:

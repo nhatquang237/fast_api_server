@@ -1,14 +1,19 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
+
 from data_connect import add_to_database, delete_spend_data, get_from_database, update_database
 from models import AddSpendList, DeleteSpendList, UpdateSpendList
+from utility import decode_jwt_token
 
 router = APIRouter()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # GET route to get data from the database
 @router.get('/data')
-async def get_data():
+async def get_data(token: str = Depends(oauth2_scheme)):
+    token_data = decode_jwt_token(token)
     data = await get_from_database()
     return data
 

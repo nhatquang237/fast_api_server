@@ -8,7 +8,7 @@ from bson import ObjectId
 from typing import List
 
 from models import UpdateSpendList
-from config import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES
+from settings import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES
 
 def update_document(collection, spend):
     collection.update_one(
