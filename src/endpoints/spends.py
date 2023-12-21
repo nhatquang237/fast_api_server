@@ -13,7 +13,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # GET route to get data from the database
 @router.get('/data')
 async def get_data(token: str = Depends(oauth2_scheme)):
-    token_data = decode_jwt_token(token)
+    # Decode and verify the JWT token, exception will be raised in case token is not valid
+    decode_jwt_token(token)
+    
     data = await get_from_database()
     return data
 

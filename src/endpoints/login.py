@@ -1,12 +1,10 @@
-
 from fastapi import Depends, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from data_connect import *
 from models import Token, NewUser, Username
-from utility import create_jwt_token, decode_jwt_token
-from settings import TOKEN_EXPIRE_MINUTES
+from utility import create_jwt_token
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -55,9 +53,3 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         "access_token": token,
         "token_type": "bearer",
     }
-
-@router.get("/protected")
-async def protected_route(token: str = Depends(oauth2_scheme)):
-    # Decode and verify the JWT token
-    token_data = decode_jwt_token(token)
-    return {"message": "You are authenticated", "token_data": token_data}
