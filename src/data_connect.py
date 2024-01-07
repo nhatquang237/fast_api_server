@@ -98,6 +98,12 @@ async def add_user_to_database(new_user):
     # Get dictionary of fields in data
     new_user = new_user.model_dump()
 
+    # Check if email was used
+    is_exist = collection.count_documents({"username": new_user["username"]})
+
+    if is_exist:
+        return {"status_code": 400, "detail": None}
+
     # Hash password value before saving to database
     new_user['password'] = str(hash_password(new_user['password']))
 
