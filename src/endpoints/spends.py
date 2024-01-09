@@ -15,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 async def get_data(token: str = Depends(oauth2_scheme)):
     # Decode and verify the JWT token, exception will be raised in case token is not valid
     decode_jwt_token(token)
-    
+
     data = await get_from_database()
     return data
 
@@ -46,7 +46,7 @@ async def add_data(request_data: AddSpendList=Depends(), token: str = Depends(oa
         raise HTTPException(status_code=500, detail='Internal server error')
 
 
-@router.delete('/delete', response_model=DeleteSpendList)
+@router.patch('/delete', response_model=DeleteSpendList)
 async def delete_data(request_data: DeleteSpendList, token: str = Depends(oauth2_scheme)):
     decode_jwt_token(token)
     try:
