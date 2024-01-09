@@ -1,8 +1,6 @@
 import pytest
 from test_base import TestBase, test_account
 
-
-
 class TestLogin(TestBase):
 
     @pytest.mark.login

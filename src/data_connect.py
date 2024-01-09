@@ -126,4 +126,3 @@ async def get_user_from_database(data):
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
