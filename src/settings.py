@@ -1,6 +1,9 @@
 import os
 from dotenv import load_dotenv
 
+if "MONGODB_URI" in os.environ:
+    # To make sure the value of uri always up to date with .env file
+    del os.environ["MONGODB_URI"]
 load_dotenv()
 
 PORT = int(os.environ.get("PORT"))
