@@ -1,6 +1,17 @@
 import bcrypt
 import logging
+import base64
+import os.path
+import random
 
+from email.message import EmailMessage
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
+from pathlib import Path
 from fastapi import HTTPException
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -8,7 +19,7 @@ from bson import ObjectId
 from typing import List
 
 from models import UpdateSpendList
-from settings import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES
+from settings import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES, EMAIL
 
 def update_document(collection, spend):
     collection.update_one(
@@ -104,3 +115,63 @@ def decode_jwt_token(token: str):
         return payload
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
+
+def get_random_six_digit_str() -> str:
+    return ''.join(str(random.randint(0,10)) for _ in range(6))
+
+
+# If modifying these scopes, delete the file token.json.
+SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+
+def gmail_send_message(target_email):
+    """
+    Send confirmation email with passcode to create new account
+    """
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            root_path = Path(__file__).resolve().parents[1]
+            secrets_path = os.path.join(root_path, "credentials.json")
+            
+            flow = InstalledAppFlow.from_client_secrets_file(secrets_path, SCOPES)
+            creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+        with open("token.json", "w") as token:
+            token.write(creds.to_json())
+
+    # Call the Gmail API
+    try:
+        service = build("gmail", "v1", credentials=creds)
+        message = EmailMessage()
+
+        confirmation_code = get_random_six_digit_str()
+        message.set_content(f"Your confirmation code is: {confirmation_code}")
+
+        message["To"] = target_email
+        message["From"] = EMAIL
+        message["Subject"] = "Confirmation Email"
+
+        # encoded message
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        create_message = {"raw": encoded_message}
+        # pylint: disable=E1101
+        send_message = (
+            service.users()
+            .messages()
+            .send(userId="me", body=create_message)
+            .execute()
+        )
+        print(f'Confirmation code: {confirmation_code}')
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        send_message = None

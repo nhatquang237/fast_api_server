@@ -18,6 +18,3 @@ ORIGINS = [origin for origin in os.environ.get("ORIGINS").split(",") if origin]
 
 # Email sending account
 EMAIL = os.environ.get("GMAIL_EMAIL")
-PASSWORD = os.environ.get("GMAIL_PASSWORD")
-GMAIL_SMTP_PORT = os.environ.get("GMAIL_SMTP_PORT")
-GMAIL_SMTP_SERVER = os.environ.get("GMAIL_SMTP_SERVER")
