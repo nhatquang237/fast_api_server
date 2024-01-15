@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from data_connect import *
-from models import Token, NewUser, Username
-from utility import create_jwt_token
+from models import Token, NewUser, Username, Email
+from utility import create_jwt_token, gmail_send_message
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -15,6 +15,18 @@ async def register(user: NewUser):
         # Add data validation function before connecting to the database
         result = await add_user_to_database(user)
         return JSONResponse(content=f"{result['detail']}", status_code=result['status_code'])
+
+    except Exception as e:
+        print(f'Error adding user to the database: {e}')
+        raise HTTPException(status_code=500, detail='Internal server error')
+
+
+@router.post("/authenticate")
+async def email_authenticate(data: Email):
+    try:
+        email = data.email
+        result = gmail_send_message(email)
+        return JSONResponse(content=result)
 
     except Exception as e:
         print(f'Error adding user to the database: {e}')

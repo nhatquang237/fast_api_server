@@ -14,6 +14,9 @@ class TokenData(BaseModel):
 class Username(BaseModel):
     username: str
 
+class Email(BaseModel):
+    email: str
+
 
 class NewUser(BaseModel):
     username: str

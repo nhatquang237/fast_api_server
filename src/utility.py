@@ -118,7 +118,7 @@ def decode_jwt_token(token: str):
 
 
 def get_random_six_digit_str() -> str:
-    return ''.join(str(random.randint(0,10)) for _ in range(6))
+    return ''.join(str(random.randint(0, 9)) for _ in range(6))
 
 
 # If modifying these scopes, delete the file token.json.
@@ -129,6 +129,7 @@ def gmail_send_message(target_email):
     Send confirmation email with passcode to create new account
     """
     creds = None
+
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
@@ -141,7 +142,7 @@ def gmail_send_message(target_email):
         else:
             root_path = Path(__file__).resolve().parents[1]
             secrets_path = os.path.join(root_path, "credentials.json")
-            
+
             flow = InstalledAppFlow.from_client_secrets_file(secrets_path, SCOPES)
             creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
@@ -162,8 +163,8 @@ def gmail_send_message(target_email):
 
         # encoded message
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-
         create_message = {"raw": encoded_message}
+
         # pylint: disable=E1101
         send_message = (
             service.users()
@@ -171,7 +172,8 @@ def gmail_send_message(target_email):
             .send(userId="me", body=create_message)
             .execute()
         )
-        print(f'Confirmation code: {confirmation_code}')
+
+        return confirmation_code
     except HttpError as error:
         print(f"An error occurred: {error}")
         send_message = None
