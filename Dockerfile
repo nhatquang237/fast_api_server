@@ -1,7 +1,10 @@
 FROM python:3.10.6-slim
 
-# set the working directory
+# Set the working directory
 WORKDIR /app
+
+# Set variable for environment checking
+ENV IN_CONTAINER=true
 
 # install dependencies
 COPY ./requirements.txt /app
