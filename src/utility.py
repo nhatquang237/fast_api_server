@@ -18,10 +18,10 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 from typing import List
 
-from models import UpdateSpendList
+from models import UpdateSpend
 from settings import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES, EMAIL
 
-def update_document(collection, spend):
+def update_document(collection, spend: UpdateSpend):
     collection.update_one(
         {"_id": ObjectId(spend.id)},
         {"$set": {
