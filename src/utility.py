@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 from typing import List
 
-from models import UpdateSpend
+from models import UpdateSpend, AddSpend
 from settings import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES, EMAIL
 
 def update_document(collection, spend: UpdateSpend):
@@ -177,3 +177,24 @@ def gmail_send_message(target_email):
     except HttpError as error:
         print(f"An error occurred: {error}")
         send_message = None
+
+def create_dummy_big_data(number_of_document: int) -> List[dict]:
+    """Create dummy data for testing database query with big collection
+
+    Args:
+        number_of_document (int): number of dummy document to create
+
+    Returns:
+        List[dict]: document data in json format
+    """
+    members = ["Phuc", "Tai", "Thanh", "Tien", "Quang"]
+    return [
+        AddSpend(
+            name=f"Test spend {i + 1}",
+            value=random.randint(1, 9) * 1000,
+            payer=random.choice(members),
+            shareholder=random.sample(members, k=random.randint(1, 5))
+        ).model_dump() for i in range(number_of_document)
+    ]
+
+# print(*create_dummy_big_data(10), sep="\n")
