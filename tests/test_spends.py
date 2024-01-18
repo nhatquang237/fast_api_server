@@ -1,5 +1,6 @@
 import pytest
 from test_base import TestBase, test_account, test_data
+from utility import create_dummy_big_data
 
 insert_id = None
 class TestSpends(TestBase):
@@ -33,6 +34,17 @@ class TestSpends(TestBase):
 
         assert "spendData" in received_data
         assert len(received_data["spendData"]) > 0
+
+    # @pytest.mark.spend
+    # def test_add_big_data(self, headers):
+    #     big_data = create_dummy_big_data(50000)
+    #     response = self.client.post("/add", json=big_data, headers=headers)
+    #     assert response.status_code == 200
+
+    #     global insert_id
+    #     insert_id = response.json()
+
+    #     assert insert_id != ""
 
     @pytest.mark.spend
     def test_add_data(self, headers):
