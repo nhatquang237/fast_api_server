@@ -24,3 +24,20 @@ class DatabaseConnection:
         """Enable ability to close connection on purpose"""
         del cls._instance  # Remove the reference to the instance
         cls._instance = None
+
+    @property
+    def spend_database(self):
+        return self.client['test']
+
+    @property
+    def spend_collection(self):
+        return self.spend_database['spendData']
+
+    @property
+    def shareholder_collection(self):
+        return self.spend_database['shareholderData']
+
+    @property
+    def user_collection(self):
+        return self.spend_database['users']
+
