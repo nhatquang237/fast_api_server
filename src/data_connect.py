@@ -72,7 +72,7 @@ async def get_from_database():
         spend_collection = db.spend_collection
         shareholder_collection = db.shareholder_collection
 
-        spends = list(spend_collection.find({}))
+        spends = list(spend_collection.find({}).sort("_id"))
         shareholders = list(shareholder_collection.find({}))
 
         for spend in spends:
