@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 
-from data_connect import add_to_database, delete_spend_data, get_from_database, update_database
+from data_connect import add_to_database, delete_spend_data, get_from_database, update_database, get_spend_sort_by_payer
 from models import AddSpendList, DeleteSpendList, UpdateSpendList
 from utility import decode_jwt_token, get_oid_str
 
@@ -17,6 +17,16 @@ async def get_data(token: str = Depends(oauth2_scheme)):
     decode_jwt_token(token)
 
     data = await get_from_database()
+    return data
+
+
+# GET route to get data from the database
+@router.get('/data/{payer}')
+async def get_data(payer: str, token: str = Depends(oauth2_scheme)):
+    # Decode and verify the JWT token, exception will be raised in case token is not valid
+    decode_jwt_token(token)
+
+    data = await get_spend_sort_by_payer(payer)
     return data
 
 
@@ -55,3 +65,9 @@ async def delete_data(request_data: DeleteSpendList, token: str = Depends(oauth2
     except Exception as e:
         print(f'Error deleting document database: {e}')
         raise HTTPException(status_code=500, detail='Internal server error')
+
+
+
+# NOTE:
+# Add some route with path parameters to retreive sorted data from database
+# Apply advance query action with mongodb into this project

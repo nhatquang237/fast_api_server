@@ -19,6 +19,7 @@ async def delete_spend_data(req):
         result = spend_collection.delete_many({"_id": {"$in": object_ids}})
 
         return {"message": f"Database value updated successfully. Deleted {result.deleted_count} documents."}
+
     except Exception as error:
         print(f'Error updating database: {error}')
         raise HTTPException(status_code=500, detail='Internal server error')
@@ -33,6 +34,7 @@ async def update_database(req):
             update_document(spends, spend)
 
         return {"message": "Database value updated successfully"}
+
     except Exception as error:
         print(f'Error updating database: {error}')
         raise HTTPException(status_code=500, detail='Internal server error')
@@ -50,15 +52,17 @@ async def get_spend_sort_by_payer(payer: str):
         spends = list(result)
         shareholders = list(shareholder_collection.find({}))
 
+        # Get id string from ObjectId to get serialize data to sent in json format
         for spend in spends:
-            # Get id string from ObjectId to get serialize data to sent in json format
             spend["_id"] = str(spend["_id"])
         shareholders[0]["_id"] = str(shareholders[0]["_id"])
 
         return {'shareholderData': shareholders[0], 'spendData': spends}
+
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         return {'shareholderData': [], 'spendData': []}
+
     finally:
         close_connection()
 
@@ -95,6 +99,7 @@ async def add_to_database(new_data):
         result = spend_collection.insert_many(new_data)
 
         return result.inserted_ids
+
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -140,6 +145,7 @@ async def get_user_from_database(data):
         )
 
         return result
+
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")

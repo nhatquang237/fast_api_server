@@ -1,21 +1,27 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer
 
+from data_connection import SocketConnectionManager
 
 router = APIRouter()
+manager = SocketConnectionManager()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # WebSocket route
-@router.websocket("/ws/")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
+@router.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int):
+    await manager.connect(websocket)
+    await manager.send_personal_message(f"Welcome: Client #{client_id}", websocket)
     try:
         while True:
-            # Receive message from the client
             data = await websocket.receive_text()
-            print(f"Received message from client: {data}")
-
-            # Send a response back to the client
-            await websocket.send_text(f"Message received: {data}")
+            await manager.send_personal_message(f"You wrote: {data}", websocket)
+            await manager.broadcast(f"Client #{client_id} says: {data}")
     except WebSocketDisconnect:
-        websocket.close()
+        await manager.broadcast(f"Client #{client_id} left the chat")
+        manager.disconnect(websocket)
+
+    # while True:
+    #     data = await websocket.receive_text()
+    #     await manager.send_personal_message(f"You wrote: {data}", websocket)
+    #     await manager.broadcast(f"Client #{client_id} says: {data}")
