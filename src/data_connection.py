@@ -49,11 +49,11 @@ class SocketConnectionManager:
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        print(f"Number of connections: {len(self.active_connections)}")
+        print(f"Number of live connections: {len(self.active_connections)}")
 
     async def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
-        print(f"Number of connections: {len(self.active_connections)}")
+        print(f"Number of live connections: {len(self.active_connections)}")
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)

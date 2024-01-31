@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-
+from pymongo import DESCENDING
 from data_connection import DatabaseConnection
 from utility import update_document, get_ids_from_documents, hash_password
 
@@ -72,7 +72,7 @@ async def get_from_database():
         spend_collection = db.spend_collection
         shareholder_collection = db.shareholder_collection
 
-        spends = list(spend_collection.find({}).sort("_id"))
+        spends = list(spend_collection.find({}).sort("_id", DESCENDING))
         shareholders = list(shareholder_collection.find({}))
 
         for spend in spends:
