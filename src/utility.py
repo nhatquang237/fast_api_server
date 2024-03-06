@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 from typing import List
 
-from models import UpdateSpend, AddSpend
+from models.spend import UpdateSpend, AddSpend
 from settings import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES, EMAIL
 
 def update_document(collection, spend: UpdateSpend):

@@ -134,7 +134,6 @@ async def add_user_to_database(new_user):
 
     return {"status_code": 200, "detail": result.inserted_id}
 
-
 async def get_user_from_database(data):
     db = DatabaseConnection()
     try:
@@ -145,7 +144,7 @@ async def get_user_from_database(data):
         )
 
         return result
-
+ 
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")

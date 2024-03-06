@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from data_connect import *
-from models import Token, NewUser, Username, Email
+from models.misc import Token, Email
+from models.users import NewUser, Username
 from utility import create_jwt_token, gmail_send_message
 
 router = APIRouter()
@@ -51,17 +52,16 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     """
     try:
         result = await get_user_from_database(form_data)
-        token = ""
+
         # Create token and send back to front-end
-        if result:
-            result.pop("_id", None)
-            token = create_jwt_token(result)
+        if not result:
+            return JSONResponse(status_code=401, content={"detail": "Wrong credentials."})
+
+        result.pop("_id", None)
+        token = create_jwt_token(result)
 
     except Exception as e:
         print(f'Error adding user to the database: {e}')
         raise HTTPException(status_code=500, detail='Internal server error')
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-    }
+    return JSONResponse(content={"access_token": token,"token_type": "bearer"})
