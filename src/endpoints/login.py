@@ -34,7 +34,7 @@ async def email_authenticate(data: Email):
         raise HTTPException(status_code=500, detail='Internal server error')
 
 
-@router.post("/check")
+@router.post("/verification")
 async def username_check(username: Username):
     try:
         result = await check_email_existence(username)

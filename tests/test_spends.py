@@ -1,13 +1,13 @@
 import pytest
 from test_base import TestBase, test_account, test_data
-from utility import create_dummy_big_data
+# from utility import create_dummy_big_data
 
 insert_id = None
 class TestSpends(TestBase):
     login_token = None
 
     @pytest.fixture
-    def headers(self) -> dict:
+    def headers(self):
         if not self.login_token:
             # Login with testing account to get token
             response = self.client.post("/login", data=test_account)
