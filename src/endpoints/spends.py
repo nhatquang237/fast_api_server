@@ -13,8 +13,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # Create local dictionary for caching get request
 cache_dict = {"saved_data": None}
 
+endpoint_path = "/spends"
+
 # GET route to get data from the database
-@router.get('/data')
+@router.get(endpoint_path)
 async def get_data(token: str = Depends(oauth2_scheme)):
     # Decode and verify the JWT token, exception will be raised in case token is not valid
     decode_jwt_token(token)
@@ -26,8 +28,7 @@ async def get_data(token: str = Depends(oauth2_scheme)):
     return cache_dict['saved_data']
 
 
-# GET route to get data from the database
-@router.get('/data/{payer}')
+@router.get(endpoint_path + '/{payer}')
 async def get_data(payer: str, token: str = Depends(oauth2_scheme)):
     # Decode and verify the JWT token, exception will be raised in case token is not valid
     decode_jwt_token(token)
@@ -37,7 +38,7 @@ async def get_data(payer: str, token: str = Depends(oauth2_scheme)):
 
 
 # PUT route to handle the to update the database
-@router.put('/update', response_model=UpdateSpendList)
+@router.put(endpoint_path, response_model=UpdateSpendList)
 async def update_data(request_data: UpdateSpendList=Depends(), token: str = Depends(oauth2_scheme)):
     decode_jwt_token(token)
     try:
@@ -51,7 +52,7 @@ async def update_data(request_data: UpdateSpendList=Depends(), token: str = Depe
 
 
 # POST route for adding a document
-@router.post('/add', response_model=AddSpendList)
+@router.post(endpoint_path, response_model=AddSpendList)
 async def add_data(request_data: AddSpendList=Depends(), token: str = Depends(oauth2_scheme)):
     decode_jwt_token(token)
     try:
@@ -66,7 +67,7 @@ async def add_data(request_data: AddSpendList=Depends(), token: str = Depends(oa
         raise HTTPException(status_code=500, detail='Internal server error')
 
 
-@router.patch('/delete', response_model=DeleteSpendList)
+@router.patch(endpoint_path, response_model=DeleteSpendList)
 async def delete_data(request_data: DeleteSpendList, token: str = Depends(oauth2_scheme)):
     decode_jwt_token(token)
     try:
