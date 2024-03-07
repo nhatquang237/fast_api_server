@@ -10,7 +10,7 @@ from utility import create_jwt_token, gmail_send_message
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-@router.post("/register")
+@router.post("/signup")
 async def register(user: NewUser):
     try:
         # Add data validation function before connecting to the database
