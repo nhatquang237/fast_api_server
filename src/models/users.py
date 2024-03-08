@@ -1,11 +1,11 @@
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, StringConstraints, EmailStr
 from typing_extensions import Annotated
 
 from regex_pattern import password_pattern
 
 
 class Username(BaseModel):
-    username: str
+    username: EmailStr
 
 class NewUser(BaseModel):
     username: str
