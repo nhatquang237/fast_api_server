@@ -1,11 +1,11 @@
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 
 from data_connect import add_to_database, delete_spend_data, get_from_database, update_database, get_spend_sort_by_payer
 from models.spend import AddSpendList, DeleteSpendList, UpdateSpendList
-from utility import decode_jwt_token, get_oid_str
+from utility import decode_jwt_token, get_oid_str, rate_limiter
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -13,28 +13,27 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # Create local dictionary for caching get request
 cache_dict = {"saved_data": None}
 
-endpoint_path = "/spends"
+endpoint_path = "/spends/"
 
 # GET route to get data from the database
 @router.get(endpoint_path)
-async def get_data(token: str = Depends(oauth2_scheme)):
+@rate_limiter(limit_rate=2, time_frame=10)
+async def get_data(request: Request, payer: str | None = None, token: str = Depends(oauth2_scheme)):
     # Decode and verify the JWT token, exception will be raised in case token is not valid
     decode_jwt_token(token)
+
+    if payer:
+        if not payer in cache_dict:
+            data = await get_spend_sort_by_payer(payer)
+            cache_dict[payer] = data
+
+        return cache_dict[payer]
 
     if not cache_dict['saved_data']:
         data = await get_from_database()
         cache_dict['saved_data'] = data
 
     return cache_dict['saved_data']
-
-
-@router.get(endpoint_path + '/{payer}')
-async def get_data(payer: str, token: str = Depends(oauth2_scheme)):
-    # Decode and verify the JWT token, exception will be raised in case token is not valid
-    decode_jwt_token(token)
-
-    data = await get_spend_sort_by_payer(payer)
-    return data
 
 
 # PUT route to handle the to update the database
@@ -44,7 +43,7 @@ async def update_data(request_data: UpdateSpendList=Depends(), token: str = Depe
     try:
         await update_database(request_data)
         # Clear the cache
-        cache_dict['saved_data'] = None
+        cache_dict.clear()
         return JSONResponse(content="Database updated successfully")
     except Exception as e:
         print(f'Error updating database: {e}')
@@ -60,7 +59,7 @@ async def add_data(request_data: AddSpendList=Depends(), token: str = Depends(oa
         result = await add_to_database(request_data.items)
         insert_ids = ",".join((get_oid_str(document) for document in result))
         # Clear the cache
-        cache_dict['saved_data'] = None
+        cache_dict.clear()
         return JSONResponse(content=insert_ids)
     except Exception as e:
         print(f'Error adding data to the database: {e}')
@@ -73,7 +72,7 @@ async def delete_data(request_data: DeleteSpendList, token: str = Depends(oauth2
     try:
         result = await delete_spend_data(request_data)
         # Clear the cache
-        cache_dict['saved_data'] = None
+        cache_dict.clear()
         return JSONResponse(content=f'{result["message"]}')
     except Exception as e:
         print(f'Error deleting document database: {e}')
