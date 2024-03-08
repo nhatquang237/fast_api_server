@@ -1,3 +1,4 @@
+import time
 import bcrypt
 import logging
 import base64
@@ -12,11 +13,13 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from pathlib import Path
-from fastapi import HTTPException
+from fastapi import HTTPException, Request, status
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from bson import ObjectId
 from typing import List
+from collections import defaultdict
+from functools import wraps
 
 from models.spend import UpdateSpend, AddSpend
 from settings import SECRET_KEY, ALGORITHM, TOKEN_EXPIRE_MINUTES, EMAIL
@@ -103,7 +106,7 @@ def check_password(password: str, hashed_password: bytes) -> bool:
 # Function to create a JWT token
 def create_jwt_token(data: dict):
     to_encode = data.copy()
-    expires = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRE_MINUTES)
+    expires = datetime.utcnow() + timedelta(minutes=2) #TOKEN_EXPIRE_MINUTES
     to_encode.update({"exp": expires})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -197,4 +200,35 @@ def create_dummy_big_data(number_of_document: int) -> List[dict]:
         ).model_dump() for i in range(number_of_document)
     ]
 
-# print(*create_dummy_big_data(10), sep="\n")
+def rate_limiter(limit_rate: int, time_frame: int):
+    """ Rate limiter decorator for protected routes (with token)
+
+    Args:
+        time_frame (int): time frame (in second)
+        limit_rate (int): Maximum count of access per time frame
+
+    """
+    #rate counter dictionary {token: number of request}
+    access_count = defaultdict(int)
+    expire_time = defaultdict(float)
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            client_ip = kwargs['request'].client.host
+
+            # Set exprie time for from first call
+            now_time = time.time()
+            if not expire_time[client_ip] or now_time > expire_time[client_ip]:
+                expire_time[client_ip] = now_time + time_frame
+                access_count[client_ip] = 0
+
+            access_count[client_ip] += 1
+            if access_count[client_ip] > limit_rate:
+                raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+
+            return await func(*args, **kwargs)  # Call the function that's being decorated
+
+        return wrapper
+
+    return decorator
