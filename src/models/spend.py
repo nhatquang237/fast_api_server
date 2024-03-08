@@ -22,10 +22,30 @@ class AddSpend(BaseModel):
             raise ValueError('payer cannot contain only digits')
         return v
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "apple",
+                    "payer": "John",
+                    "shareholder": ["John", "and", "his", "friend's", "names"],
+                    "value": 1000,
+                }
+            ]
+        }
+    }
 
 class DeleteSpend(BaseModel):
     id: str
-
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": "The id string of deleted spend",
+                }
+            ]
+        }
+    }
 
 class UpdateSpend(AddSpend, DeleteSpend):
     ...
@@ -33,12 +53,12 @@ class UpdateSpend(AddSpend, DeleteSpend):
 
 class UpdateSpendList(BaseModel):
     """List of Spend object"""
-    items: List[UpdateSpend]
+    items: conlist(UpdateSpend, min_length=1) # type: ignore
 
 
 class AddSpendList(BaseModel):
     """List of Spend object"""
-    items: List[AddSpend]
+    items: conlist(AddSpend, min_length=1) # type: ignore
 
 
 class DeleteSpendList(BaseModel):
