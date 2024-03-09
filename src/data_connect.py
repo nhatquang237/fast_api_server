@@ -3,8 +3,6 @@ from pymongo import DESCENDING
 from data_connection import DatabaseConnection
 from utility import update_document, get_ids_from_documents, hash_password
 
-def close_connection():
-    DatabaseConnection.delete_instance()
 
 async def delete_spend_data(req):
     db = DatabaseConnection()
@@ -63,8 +61,6 @@ async def get_spend_sort_by_payer(payer: str):
         print(f"Error connecting to MongoDB: {error}")
         return {'shareholderData': [], 'spendData': []}
 
-    finally:
-        close_connection()
 
 async def get_from_database():
     db = DatabaseConnection()
@@ -86,8 +82,6 @@ async def get_from_database():
         print(f"Error connecting to MongoDB: {error}")
         return {'shareholderData': [], 'spendData': []}
 
-    finally:
-        close_connection()
 
 async def add_to_database(new_data):
     db = DatabaseConnection()
@@ -144,7 +138,7 @@ async def get_user_from_database(data):
         )
 
         return result
- 
+
     except Exception as error:
         print(f"Error connecting to MongoDB: {error}")
         raise HTTPException(status_code=500, detail="Internal server error")
