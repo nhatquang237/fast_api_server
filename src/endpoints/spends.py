@@ -5,22 +5,21 @@ from fastapi.security import OAuth2PasswordBearer
 
 from data_connect import add_to_database, delete_spend_data, get_from_database, update_database, get_spend_sort_by_payer
 from models.spend import AddSpendList, DeleteSpendList, UpdateSpendList
-from utility import decode_jwt_token, get_oid_str, rate_limiter
+from utility import decode_jwt_token, get_oid_str, rate_limiter, validate_token
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # Create local dictionary for caching get request
-cache_dict = {"saved_data": None}
+cache_dict = {}
 
 endpoint_path = "/spends/"
 
 # GET route to get data from the database
 @router.get(endpoint_path)
 @rate_limiter(limit_rate=2, time_frame=10)
+@validate_token
 async def get_data(request: Request, payer: str | None = None, token: str = Depends(oauth2_scheme)):
-    # Decode and verify the JWT token, exception will be raised in case token is not valid
-    decode_jwt_token(token)
 
     if payer:
         if not payer in cache_dict:
@@ -29,7 +28,7 @@ async def get_data(request: Request, payer: str | None = None, token: str = Depe
 
         return cache_dict[payer]
 
-    if not cache_dict['saved_data']:
+    if not 'saved_data' in cache_dict:
         data = await get_from_database()
         cache_dict['saved_data'] = data
 
@@ -38,8 +37,9 @@ async def get_data(request: Request, payer: str | None = None, token: str = Depe
 
 # PUT route to handle the to update the database
 @router.put(endpoint_path, response_model=UpdateSpendList)
+@validate_token
 async def update_data(request_data: UpdateSpendList=Depends(), token: str = Depends(oauth2_scheme)):
-    decode_jwt_token(token)
+
     try:
         await update_database(request_data)
         # Clear the cache
@@ -52,8 +52,9 @@ async def update_data(request_data: UpdateSpendList=Depends(), token: str = Depe
 
 # POST route for adding a document
 @router.post(endpoint_path, response_model=AddSpendList)
+@validate_token
 async def add_data(request_data: AddSpendList=Depends(), token: str = Depends(oauth2_scheme)):
-    decode_jwt_token(token)
+
     try:
         # Add data validation function before connecting to the database
         result = await add_to_database(request_data.items)
@@ -67,8 +68,8 @@ async def add_data(request_data: AddSpendList=Depends(), token: str = Depends(oa
 
 
 @router.patch(endpoint_path, response_model=DeleteSpendList)
+@validate_token
 async def delete_data(request_data: DeleteSpendList, token: str = Depends(oauth2_scheme)):
-    decode_jwt_token(token)
     try:
         result = await delete_spend_data(request_data)
         # Clear the cache
@@ -77,7 +78,6 @@ async def delete_data(request_data: DeleteSpendList, token: str = Depends(oauth2
     except Exception as e:
         print(f'Error deleting document database: {e}')
         raise HTTPException(status_code=500, detail='Internal server error')
-
 
 
 # NOTE:

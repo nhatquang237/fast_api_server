@@ -232,3 +232,18 @@ def rate_limiter(limit_rate: int, time_frame: int):
         return wrapper
 
     return decorator
+
+def validate_token(function):
+    """
+        Decode and verify the JWT token, exception will be raised in case token is not valid
+    """
+    @wraps(function)
+    async def wrapper(*args, **kwargs):
+        if not ('token' in kwargs and kwargs['token']):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        decode_jwt_token(kwargs['token'])
+
+        return await function(*args, **kwargs)
+
+    return wrapper
